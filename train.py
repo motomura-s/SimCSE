@@ -564,7 +564,7 @@ def main():
 
     # Evaluation
     results = {}
-    if training_args.do_eval:
+    if False and training_args.do_eval: # TODO: do_evalのfalseの指定が分からない
         logger.info("*** Evaluate ***")
         results = trainer.evaluate(eval_senteval_transfer=True)
 
