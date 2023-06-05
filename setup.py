@@ -21,7 +21,7 @@ setup(
         "scipy",
         "transformers",
         "torch",
-        "numpy>=1.19.5,<1.20",
+        "numpy",
         "setuptools"
     ]
 )
