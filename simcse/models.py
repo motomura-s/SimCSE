@@ -82,7 +82,9 @@ class Pooler(nn.Module):
         elif self.pooler_type == "mask":
             mask_token_id = 4 # tokenizer.convert_tokens_to_ids(["[MASK]"])[0]
             mask_indices = [ids.tolist().index(mask_token_id)for ids in input_ids]
-            return torch.tensor([last_h[mask_i].tolist() for last_h, mask_i in zip(last_hidden, mask_indices)])        
+            pooled_result = torch.tensor([last_h[mask_i].tolist() for last_h, mask_i in zip(last_hidden, mask_indices)])
+            pooled_result.requires_grad = True
+            return pooled_result      
         else:
             raise NotImplementedError
 
