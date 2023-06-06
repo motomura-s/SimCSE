@@ -58,9 +58,9 @@ class Pooler(nn.Module):
     def __init__(self, pooler_type):
         super().__init__()
         self.pooler_type = pooler_type
-        assert self.pooler_type in ["cls", "cls_before_pooler", "avg", "avg_top2", "avg_first_last"], "unrecognized pooling type %s" % self.pooler_type
+        assert self.pooler_type in ["cls", "cls_before_pooler", "avg", "avg_top2", "avg_first_last", "mask"], "unrecognized pooling type %s" % self.pooler_type
 
-    def forward(self, attention_mask, outputs):
+    def forward(self, attention_mask, outputs, input_ids):
         last_hidden = outputs.last_hidden_state
         pooler_output = outputs.pooler_output
         hidden_states = outputs.hidden_states
@@ -79,6 +79,10 @@ class Pooler(nn.Module):
             last_hidden = hidden_states[-1]
             pooled_result = ((last_hidden + second_last_hidden) / 2.0 * attention_mask.unsqueeze(-1)).sum(1) / attention_mask.sum(-1).unsqueeze(-1)
             return pooled_result
+        elif self.pooler_type == "mask":
+            mask_token_id = 4 # tokenizer.convert_tokens_to_ids(["[MASK]"])[0]
+            mask_indices = [ids.tolist().index(mask_token_id)for ids in input_ids]
+            return torch.tensor([last_h[mask_i].tolist() for last_h, mask_i in zip(last_hidden, mask_indices)])        
         else:
             raise NotImplementedError
 
@@ -152,7 +156,7 @@ def cl_forward(cls,
         )
 
     # Pooling
-    pooler_output = cls.pooler(attention_mask, outputs)
+    pooler_output = cls.pooler(attention_mask, outputs, input_ids)
     pooler_output = pooler_output.view((batch_size, num_sent, pooler_output.size(-1))) # (bs, num_sent, hidden)
 
     # If using "cls", we add an extra MLP layer
